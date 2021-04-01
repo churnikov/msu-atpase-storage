@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "msu_atpase_storage"
+version = "0.0.1"
+description = ""
+authors = ["Nikita Churikov <nikita@chur.ru>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+boto3 = "^1.17.43"
+aiogram = "^2.12.1"
+pydantic = {extras = ["dotenv"], version = "^1.8.1"}
+loguru = "^0.5.3"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^2.11.1"
+mypy = "^0.812"
+
+[tool.black]
+line-length = 120
+target_version = ["py38"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
