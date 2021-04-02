@@ -10,10 +10,16 @@ boto3 = "^1.17.43"
 aiogram = "^2.12.1"
 pydantic = {extras = ["dotenv"], version = "^1.8.1"}
 loguru = "^0.5.3"
+google-api-python-client = "^2.1.0"
+google-auth-httplib2 = "^0.1.0"
+google-auth-oauthlib = "^0.4.4"
+pymongo = "^3.11.3"
+motor = "^2.3.1"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.11.1"
 mypy = "^0.812"
+pytest = "^6.2.2"
 
 [tool.black]
 line-length = 120

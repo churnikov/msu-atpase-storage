@@ -1,6 +1,7 @@
 import logging
 
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import Bot, Dispatcher, executor
+from aiogram.contrib.fsm_storage.mongo import MongoStorage
 
 from msu_atpase_storage.config import settings
 
@@ -9,8 +10,9 @@ logging.basicConfig(level=logging.INFO)
 
 # Initialize bot and dispatcher
 bot = Bot(token=settings.tg_token)
-dp = Dispatcher(bot)
+storage = MongoStorage()
+dp = Dispatcher(bot, storage=storage)
 
 
-def main(dp):
-    executor.start_polling(dp, skip_updates=True)
+def main(dispatcher: Dispatcher):
+    executor.start_polling(dispatcher, skip_updates=True)
