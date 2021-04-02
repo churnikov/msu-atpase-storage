@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseSettings, Field
@@ -13,6 +14,8 @@ class Settings(BaseSettings):
     mongo_port: str = Field(27017, env="MONGO_PORT")
     mongo_password: Optional[str] = Field(None, env="MONGO_PASSWORD")
     mongo_db_name: str = Field("aiogram_fsm", env="MONGO_DB_NAME")
+    gdrive_folder_id: str = Field(..., env="GDRIVE_FOLDER_ID")
+    gdrive_settings_path: Path = Field(..., env="GDRIVE_SETTINGS_PATH")
 
     class Config:
         env_file = ".env"
