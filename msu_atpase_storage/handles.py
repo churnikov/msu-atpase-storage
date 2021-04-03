@@ -52,7 +52,7 @@ async def get_comment(message: types.Message, state: FSMContext):
     await message.reply("Сохраняю файл")
 
     row_id = gsheet.get_next_free_row_id()
-    file_id = generate_id(row_id - 1)
+    file_id = generate_id(row_id - 2)
 
     file_json = json.loads(data["file"])
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -75,6 +75,10 @@ async def get_comment(message: types.Message, state: FSMContext):
 
 
 def get_user_name(user: User) -> str:
+    """
+    Construct username from `User` object of aiogram.
+    Result is `user.full_name (user.username)`
+    """
     name = user.full_name
     if user.username is not None:
         name += f" ({user.username})"
