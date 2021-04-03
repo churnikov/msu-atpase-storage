@@ -5,6 +5,7 @@ from aiogram.contrib.fsm_storage.mongo import MongoStorage
 
 from msu_atpase_storage.config import settings
 from msu_atpase_storage.gdrive_ import GDrive
+from msu_atpase_storage.gspreadsh import GSheet
 
 logging.basicConfig(level=logging.INFO)
 
@@ -13,6 +14,7 @@ bot = Bot(token=settings.tg_token)
 storage = MongoStorage()
 dp = Dispatcher(bot, storage=storage)
 gdrive = GDrive()
+gsheet = GSheet()
 
 
 def main(dispatcher: Dispatcher):
