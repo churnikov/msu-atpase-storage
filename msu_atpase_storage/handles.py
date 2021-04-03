@@ -21,6 +21,20 @@ async def send_welcome(message: types.Message):
     await message.reply("Hi!\nI'm EchoBot!\nPowered by aiogram.")
 
 
+@dp.message_handler(commands=["cancel"], state="*")
+async def cancel_command(message: types.Message, state: FSMContext):
+    """
+    This handler will be called when user sends `/cancel`command.
+    Cancels file upload process.
+    """
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+    logger.info("User {} canceled state {}.", get_user_name(message.from_user), current_state)
+    await state.finish()
+    await message.reply("Отмена свершилась!", reply_markup=types.ReplyKeyboardRemove())
+
+
 @dp.message_handler(content_types=ContentTypes.DOCUMENT)
 async def get_file(message: types.Message, state: FSMContext):
     """Starts the process of file upload. Triggered when user sent file."""
