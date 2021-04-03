@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
+from gspread.auth import DEFAULT_SERVICE_ACCOUNT_FILENAME
 from pydantic import BaseSettings, Field
 
 
@@ -16,6 +17,8 @@ class Settings(BaseSettings):
     mongo_db_name: str = Field("aiogram_fsm", env="MONGO_DB_NAME")
     gdrive_folder_id: str = Field(..., env="GDRIVE_FOLDER_ID")
     gdrive_settings_path: Path = Field(..., env="GDRIVE_SETTINGS_PATH")
+    gsheet_name: str = Field("atpase-storage", env="GSHEET_NAME")
+    gsheet_service_account_path: Path = Field(DEFAULT_SERVICE_ACCOUNT_FILENAME, env="GSHEET_SERVICE_ACCOUNT_PATH")
 
     class Config:
         env_file = ".env"

@@ -4,11 +4,11 @@ from pathlib import Path
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from aiogram.types import ContentTypes
+from aiogram.types import ContentTypes, User
 
 from msu_atpase_storage.id_gen import generate_id
-from msu_atpase_storage.main import bot, dp, gdrive
-from msu_atpase_storage.types_ import SaveFile
+from msu_atpase_storage.main import bot, dp, gdrive, gsheet
+from msu_atpase_storage.types_ import GSheetRow, SaveFile
 
 
 @dp.message_handler(commands=["start", "help"])
@@ -26,7 +26,7 @@ async def get_file(message: types.Message, state: FSMContext):
         data["file"] = message.document.as_json()
 
     await SaveFile.tool.set()
-    await message.answer("С какого инструмента пришел файл?")
+    await message.answer("С какого прибора пришел файл?")
 
 
 @dp.message_handler(state=SaveFile.tool)
@@ -51,7 +51,8 @@ async def get_comment(message: types.Message, state: FSMContext):
 
     await message.reply("Сохраняю файл")
 
-    file_id = generate_id(len(gdrive.list_files()))
+    row_id = gsheet.get_next_free_row_id()
+    file_id = generate_id(row_id - 2)
 
     file_json = json.loads(data["file"])
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -59,13 +60,26 @@ async def get_comment(message: types.Message, state: FSMContext):
         await bot.download_file_by_id(file_json["file_id"], tmp_file)
         file = gdrive.upload_file(tmp_file, file_id)
 
-    await message.reply(
-        "Файл сохранен\n"
-        f"Инструмент: {data['tool']}\n"
-        f"Комментарий: {data['comment']}\n"
-        f"Файл: {file_json['file_name']}\n"
-        f"Файл на GoogleDrive: {file.filename}\n"
-        f"Файл id: {file_id}\n"
-        f"Ссылка на файл: {file.link}"
+    data = GSheetRow(
+        file_id=file_id,
+        tool=data["tool"],
+        date=str(message.date),
+        user=get_user_name(message.from_user),
+        file_link=file.link,
+        comment=data["comment"],
     )
+    gsheet.add_row(data, row_id)
+
+    await message.reply("Файл сохранен\n" + str(data))
     await state.finish()
+
+
+def get_user_name(user: User) -> str:
+    """
+    Construct username from `User` object of aiogram.
+    Result is `user.full_name (user.username)`
+    """
+    name = user.full_name
+    if user.username is not None:
+        name += f" ({user.username})"
+    return name

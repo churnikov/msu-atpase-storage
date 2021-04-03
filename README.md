@@ -4,6 +4,7 @@
 - google creds 
     - https://developers.google.com/workspace/guides/create-project
     - https://developers.google.com/workspace/guides/create-credentials
+    - [gspread here](https://gspread.readthedocs.io/en/latest/oauth2.html)
 
 
 # Setup
