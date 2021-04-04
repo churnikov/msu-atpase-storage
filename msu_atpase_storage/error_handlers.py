@@ -9,7 +9,7 @@ async def handle_app_error(update: aiotypes.Update, exception: Exception):
     logger.error("Unexpected error occurred {}", repr(exception))
     await update.message.answer(
         f"На сервере произошла ошибка {repr(exception)}. "
-        "Создайте, пожалуйста issue на github, "
-        "с подробным описанием проблемы, и разработчики возьмутся за работу "
+        "Напиши @Talianash "
+        "с подробным описанием проблемы, и мы попробуем что-нибудь с этим сделать. "
         "https://github.com/churnikov/msu-atpase-storage/issues"
     )

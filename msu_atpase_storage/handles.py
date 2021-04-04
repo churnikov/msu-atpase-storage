@@ -18,7 +18,30 @@ async def send_welcome(message: types.Message):
     This handler will be called when user sends `/start` or `/help` command
     """
     logger.info("User {} logged in", get_user_name(message.from_user))
-    await message.reply("Hi!\nI'm EchoBot!\nPowered by aiogram.")
+    await message.reply(
+        "Привет! Это бот для сохранения лабораторных данных. "
+        "Ты можешь отправить ему файл, а он присвоит ему уникальный идентификатор, "
+        "сохранит на гугл-диск и выдаст тебе постоянную ссылку для скачивания."
+        " Снабжай файлы подробным описанием и делись идентификаторами "
+        "с коллегами - это должно упростить поиск нужной информации.\n"
+        "*Как пользоваться ботом?*\n"
+        "Отправь боту сообщение с файлом, без текста."
+        " Бот умеет воспринимать только один файл за раз, поэтому "
+        "если хочется отправить сразу несколько файлов - "
+        "выбери в телеграме опцию упаковки в zip-архив. После этого бот спросит, "
+        "на каком приборе файл получен. Напиши ему ответное сообщение, например, 'Аминко'. "
+        "Дальше бот попросит добавить к файлу комментарий. Не ограничивай себя! "
+        "Чем подробнее будет описание, тем легче впоследствии будет тебе и твоим коллегам. "
+        "Опиши, что за опыт ты проводил/а или прикрепи ссылку на подробное описание.\n"
+        "[Журнал загрузки данных.](https://docs.google.com/spreadsheets/d/1pS"
+        "-_5MRg70xQ6AFJJvEcuOiBTA-JbwL-ORFmxJraoss/edit?usp=sharing) "
+        "(обрати внимание, из него тоже можно скачивать файлы)\n"
+        "[Папка на гугл-диске с файлами.]("
+        "https://drive.google.com/drive/folders/1QOn4cMpERteSUKZqaTK181pXg92QRN5a?usp=sharing)\n "
+        "Если возникнут проблемы, пиши @Talianash.",
+        parse_mode=types.ParseMode.MARKDOWN,
+        disable_web_page_preview=True,
+    )
 
 
 @dp.message_handler(commands=["cancel"], state="*")
@@ -45,7 +68,7 @@ async def get_file(message: types.Message, state: FSMContext):
     logger.debug("User {} sent file {}", get_user_name(message.from_user), data["file"])
 
     await SaveFile.tool.set()
-    await message.answer("С какого прибора пришел файл?")
+    await message.answer("На каком приборе получены эти данные?")
 
 
 @dp.message_handler(state=SaveFile.tool)
@@ -63,7 +86,7 @@ async def get_tool(message: types.Message, state: FSMContext):
         )
 
         await SaveFile.comment.set()
-        await message.reply("Добавь дополнительную информацию о файле в свободной форме")
+        await message.reply("Добавь описание: суть эксперимента, организм, условия и т.д.")
     except Exception as e:
         await state.finish()
         raise e
@@ -108,10 +131,10 @@ async def get_comment(message: types.Message, state: FSMContext):
             file_link=file.link,
             comment=data["comment"],
         )
-        gsheet.add_row(data, row_id)
+        gsheet.add_row(data)
         logger.info("Saved data {} to gsheets", data)
 
-        await message.reply("Файл сохранен\n" + str(data))
+        await message.reply("Файл сохранен!\n" + str(data), disable_web_page_preview=True)
     finally:
         await state.finish()
 
