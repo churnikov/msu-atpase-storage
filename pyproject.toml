@@ -5,7 +5,7 @@ description = ""
 authors = ["Nikita Churikov <nikita@chur.ru>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 aiogram = "^2.12.1"
 pydantic = {extras = ["dotenv"], version = "^1.8.1"}
 loguru = "^0.5.3"
