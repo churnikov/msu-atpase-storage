@@ -1,8 +1,7 @@
 import logging
-from unittest.mock import MagicMock
 
 from aiogram import Bot, Dispatcher, executor
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.contrib.fsm_storage.mongo import MongoStorage
 
 from msu_atpase_storage.config import settings
 from msu_atpase_storage.gdrive_ import GDrive
@@ -12,10 +11,10 @@ logging.basicConfig(level=logging.INFO)
 
 # Initialize bot and dispatcher
 bot = Bot(token=settings.tg_token)
-storage = MemoryStorage()
+storage = MongoStorage()
 dp = Dispatcher(bot, storage=storage)
-gdrive = MagicMock()
-gsheet = MagicMock()
+gdrive = GDrive()
+gsheet = GSheet()
 
 
 def main(dispatcher: Dispatcher):
