@@ -9,7 +9,8 @@ from loguru import logger
 
 from msu_atpase_storage.id_gen import generate_id
 from msu_atpase_storage.main import bot, dp, gdrive, gsheet
-from msu_atpase_storage.types_ import GSheetRow, SaveFile
+from msu_atpase_storage.types_ import GSheetRow, SaveFile, TodayOrNot
+from msu_atpase_storage.views import get_device_kb, get_organism_kb, get_protocol_kb, was_run_this_day
 
 
 @dp.message_handler(commands=["start", "help"])
@@ -64,11 +65,12 @@ async def get_file(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data["file"] = message.document.as_json()
 
-    logger.info("User {} sent file", get_user_name(message.from_user))
-    logger.debug("User {} sent file {}", get_user_name(message.from_user), data["file"])
+        logger.info("User {} sent file", get_user_name(message.from_user))
+        logger.debug("User {} sent file {}", get_user_name(message.from_user), data["file"])
 
     await SaveFile.tool.set()
-    await message.answer("На каком приборе получены эти данные?")
+    reply_text, keyboard = get_device_kb()
+    await message.answer(text=reply_text, reply_markup=keyboard)
 
 
 @dp.message_handler(state=SaveFile.tool)
@@ -78,15 +80,110 @@ async def get_tool(message: types.Message, state: FSMContext):
         async with state.proxy() as data:
             data["tool"] = message.text
 
+            logger.info(
+                "User {user} said file {file_id} came from tool {tool}",
+                user=get_user_name(message.from_user),
+                file_id=json.loads(data["file"])["file_id"],
+                tool=message.text,
+            )
+
+        await SaveFile.next()
+        reply_text, keyboard = get_protocol_kb()
+        await message.answer(text=reply_text, reply_markup=keyboard)
+    except Exception as e:
+        await state.finish()
+        raise e
+
+
+@dp.message_handler(state=SaveFile.protocol)
+async def get_protocol(message: types.Message, state: FSMContext):
+    try:
+        """Seconds step of file upload."""
+        async with state.proxy() as data:
+            data["protocol"] = message.text
+
+            logger.info(
+                "User {user} said file {file_id} came from protocol {protocol}",
+                user=get_user_name(message.from_user),
+                file_id=json.loads(data["file"])["file_id"],
+                protocol=message.text,
+            )
+
+        await SaveFile.next()
+        reply_text, keyboard = get_organism_kb()
+        await message.answer(text=reply_text, reply_markup=keyboard)
+    except Exception as e:
+        await state.finish()
+        raise e
+
+
+@dp.message_handler(state=SaveFile.organism)
+async def get_organism(message: types.Message, state: FSMContext):
+    try:
+        """Second step of file upload."""
+        async with state.proxy() as data:
+            data["organism"] = message.text
+
+            logger.info(
+                "User {user} said file {file_id} came from organism {organism}",
+                user=get_user_name(message.from_user),
+                file_id=json.loads(data["file"])["file_id"],
+                organism=message.text,
+            )
+
+        await SaveFile.next()
+        reply_text, keyboard = was_run_this_day()
+        await message.answer(text=reply_text, reply_markup=keyboard)
+    except Exception as e:
+        await state.finish()
+        raise e
+
+
+@dp.message_handler(state=SaveFile.date_yes_no)
+async def get_is_experiment_date_today(message: types.Message, state: FSMContext):
+    try:
+        """Second step of file upload."""
+        async with state.proxy() as data:
+            is_today = TodayOrNot(message.text)
+
+            if is_today == TodayOrNot.YES:
+                await SaveFile.comment.set()
+                data["date"] = message.date
+                await message.reply("Добавь описание: суть эксперимента, условия и т.д.")
+                logger.info(
+                    "User {user} said file {file_id} was aquired today",
+                    user=get_user_name(message.from_user),
+                    file_id=json.loads(data["file"])["file_id"],
+                )
+            else:
+                await SaveFile.date.set()
+                await message.reply("Введи дату проведения эксперимента в формате 2021-04-10")
+                logger.info(
+                    "User {user} said file {file_id} wasn't aquired today",
+                    user=get_user_name(message.from_user),
+                    file_id=json.loads(data["file"])["file_id"],
+                )
+    except Exception as e:
+        await state.finish()
+        raise e
+
+
+@dp.message_handler(state=SaveFile.date)
+async def get_experiment_date(message: types.Message, state: FSMContext):
+    try:
+        """Second step of file upload."""
+        async with state.proxy() as data:
+            data["date"] = message.text
+
         logger.info(
-            "User {user} said file {file_id} came from tool {tool}",
+            "User {user} said file {file_id} was aquired on {date}",
             user=get_user_name(message.from_user),
             file_id=json.loads(data["file"])["file_id"],
-            tool=message.text,
+            date=message.text,
         )
 
         await SaveFile.comment.set()
-        await message.reply("Добавь описание: суть эксперимента, организм, условия и т.д.")
+        await message.reply("Добавь описание: суть эксперимента, условия и т.д.")
     except Exception as e:
         await state.finish()
         raise e
@@ -126,6 +223,9 @@ async def get_comment(message: types.Message, state: FSMContext):
         data = GSheetRow(
             file_id=file_id,
             tool=data["tool"],
+            protocol=data["protocol"],
+            organism=data["organism"],
+            experiment_date=str(data["date"]),
             date=str(message.date),
             user=get_user_name(message.from_user),
             file_link=file.link,

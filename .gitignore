@@ -1,5 +1,9 @@
 .env
 .idea
+.vscode
+*/__pycache__/*
+.mypy_cache
+.pytest_cache
 settings.yaml
 credentials.json
 client_secrets.json
